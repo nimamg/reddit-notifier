@@ -1,5 +1,8 @@
 import praw
 from configparser import ConfigParser
+
+from prawcore import NotFound
+
 from models import Submission
 
 
@@ -13,6 +16,13 @@ class RedditWrapper:
     def subreddits(self):
         return [sub['name'] for sub in self.config]
 
+    def subreddit_exists(self, subreddit):
+        try:
+            self.reddit.subreddits.search_by_name(subreddit, exact=True)
+            return True
+        except NotFound as e:
+            return False
+
     def get_new_posts(self):
         new_posts = {}
         for subreddit in self.subreddits:
@@ -23,4 +33,6 @@ class RedditWrapper:
                 new_posts[subreddit] = [post for post in new_posts[subreddit] if post.created_utc > latest_post.created]
         return new_posts
 
+reddit = RedditWrapper(
 
+)

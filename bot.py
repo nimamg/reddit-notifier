@@ -11,7 +11,8 @@ from telegram.ext import (
     PicklePersistence,
 )
 
-from models import User, TelegramData
+from models import User, TelegramData, Subreddit, SubredditUser
+from reddit_wrapper import reddit
 
 
 class BotWrapper:
@@ -34,9 +35,6 @@ class BotWrapper:
                 reply_markup=self.approval_keyboard(user.id),
             )
 
-
-
-
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
         sender = update.message.from_user
@@ -48,3 +46,25 @@ class BotWrapper:
             await update.message.reply_text('Welcome! You can use the bot when an admin approves you')
         else:
             await update.message.reply_text('Welcome back!')
+
+    async def add(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        sender = update.message.from_user
+        user = TelegramData.select().where(TelegramData.telegram_id == sender.id).join(User).first().user
+        if not user.approved:
+            await update.message.reply_text('You are not approved to use the bot')
+            return
+        subreddit_name = context.args[0]
+        subreddit = Subreddit.select().where(Subreddit.name == subreddit_name).first()
+        if subreddit:
+            SubredditUser.create(user=user, subreddit=subreddit)
+        else:
+            if reddit.subreddit_exists(subreddit_name):
+                subreddit = Subreddit.create(name=subreddit_name)
+                SubredditUser.create(user=user, subreddit=subreddit)
+                await update.message.reply_text(f'Subreddit {subreddit_name} added')
+            else:
+                await update.message.reply_text(f'Subreddit {subreddit_name} does not exist')
+
+
+
+

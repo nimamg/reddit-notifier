@@ -26,7 +26,7 @@ class Subreddit(BaseModel):
     name = CharField(primary_key=True)
 
 
-class UserSubreddit(BaseModel):
+class SubredditUser(BaseModel):
     user = ForeignKeyField(User, backref='subreddits')
     subreddit = ForeignKeyField(Subreddit, backref='users')
 
