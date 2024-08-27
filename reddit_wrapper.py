@@ -1,5 +1,4 @@
 import praw
-from configparser import ConfigParser
 
 from prawcore import NotFound
 
@@ -7,9 +6,8 @@ from models import Submission
 
 
 class RedditWrapper:
-    def __init__(self, reddit: praw.Reddit, config: str, limit: int = 10):
+    def __init__(self, reddit: praw.Reddit, limit: int = 10):
         self.reddit = reddit
-        self.config = ConfigParser().read(config)
         self.limit = limit
 
     @property
@@ -33,6 +31,9 @@ class RedditWrapper:
                 new_posts[subreddit] = [post for post in new_posts[subreddit] if post.created_utc > latest_post.created]
         return new_posts
 
-reddit = RedditWrapper(
+    # TODO: Periodically get new posts, save them to db, send them to respective users.
 
-)
+
+
+
+reddit = RedditWrapper()

@@ -36,10 +36,11 @@ class Submission(BaseModel):
     title = CharField()
     subreddit = ForeignKeyField(Subreddit, backref='submissions')
     created = DateTimeField(index=True)
-    url = CharField(max_length=1000)
+    linked_url = CharField(max_length=1000)
+    submission_url = CharField(max_length=1000)
 
 
-models = [Submission, User, TelegramData, Subreddit]
+models = [Submission, User, TelegramData, Subreddit, SubredditUser]
 
 
 def init_db():
