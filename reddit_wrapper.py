@@ -23,6 +23,8 @@ class RedditWrapper:
 
     def get_new_posts(self):
         new_posts = {}
+        latest_post_by_subreddit = {}
+
         for subreddit in self.subreddits:
             new_posts[subreddit] = list(self.reddit.subreddit(subreddit).new(limit=self.limit))
             latest_post = Submission.select().where(Submission.subreddit == subreddit).order_by(
@@ -32,8 +34,6 @@ class RedditWrapper:
         return new_posts
 
     # TODO: Periodically get new posts, save them to db, send them to respective users.
-
-
 
 
 reddit = RedditWrapper()
