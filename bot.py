@@ -11,7 +11,6 @@ from telegram.ext import (
     PicklePersistence,
 )
 
-from models import User, TelegramData, Subreddit, SubredditUser
 from repository import UserRepository, TelegramDataRepository, RedditRepository
 from reddit_wrapper import reddit
 
@@ -28,7 +27,7 @@ class BotWrapper:
         )
 
     async def notify_admins_for_approval(self, user, telegram_data):
-        admins: List[User] = UserRepository.get_admins_with_tg_data()
+        admins = UserRepository.get_admins_with_tg_data()
         for admin in admins:
             await self.bot.send_message(
                 admin.telegram_data_id,
@@ -49,8 +48,8 @@ class BotWrapper:
         sender = update.message.from_user
         td = TelegramDataRepository.get_telegram_data_and_user_by_id(sender.id)
         if not td:
-            user = User.create(first_name=sender.first_name, last_name=sender.last_name, admin=False)
-            td = TelegramData.create(telegram_id=sender.id, user=user, username=sender.username)
+            user = UserRepository.create_user(sender.first_name, sender.last_name)
+            td = TelegramDataRepository.create_telegram_data(sender.id, user, sender.username)
             await self.notify_admins_for_approval(user, td)
             await update.message.reply_text('Welcome! You can use the bot when an admin approves you')
         elif not td.user.approved:
@@ -64,15 +63,14 @@ class BotWrapper:
             return
         subreddit_name = context.args[0]
         subreddit = RedditRepository.get_subreddit_by_name(subreddit_name)
-        if subreddit:
-            SubredditUser.create(user=user, subreddit=subreddit)
-        else:
+        if not subreddit:
             if reddit.subreddit_exists(subreddit_name):
-                subreddit = Subreddit.create(name=subreddit_name)
-                SubredditUser.create(user=user, subreddit=subreddit)
-                await update.message.reply_text(f'Subreddit {subreddit_name} added')
+                subreddit = RedditRepository.create_subreddit(subreddit_name)
             else:
                 await update.message.reply_text(f'Subreddit {subreddit_name} does not exist')
+
+        RedditRepository.create_subreddit_user(user, subreddit)
+        await update.message.reply_text(f'Subreddit {subreddit_name} added')
 
     async def remove(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not (user := await self.get_user(update)):
@@ -81,7 +79,7 @@ class BotWrapper:
         subreddit = RedditRepository.get_subreddit_by_name(subreddit_name)
         if subreddit:
             # TODO : if no subuser, will this raise error?
-            SubredditUser.delete().where(SubredditUser.user == user, SubredditUser.subreddit == subreddit).execute()
+            RedditRepository.delete_subreddit_user(user, subreddit)
             await update.message.reply_text(f'Subreddit {subreddit_name} removed')
         else:
             await update.message.reply_text(f'Subreddit {subreddit_name} not found')
@@ -90,7 +88,7 @@ class BotWrapper:
         query = update.callback_query
         await query.answer()
         action, user_id = query.data.split('_')
-        user = User.get_by_id(user_id)
+        user = UserRepository.get_by_id(user_id)
         if not user:
             await query.edit_message_text('User not found')
             print('User not found')
