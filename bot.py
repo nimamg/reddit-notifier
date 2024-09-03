@@ -30,7 +30,7 @@ class BotWrapper:
         admins = UserRepository.get_admins_with_tg_data()
         for admin in admins:
             await self.bot.send_message(
-                admin.telegram_data_id,
+                admin.telegram_data.telegram_id,
                 f'New user {user.first_name} {user.last_name} ({telegram_data.username}) wants to use the bot',
                 reply_markup=self.approval_keyboard(user.id),
             )
@@ -84,7 +84,7 @@ class BotWrapper:
         else:
             await update.message.reply_text(f'Subreddit {subreddit_name} not found')
 
-    async def handle_approval(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    async def handle_approval(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         query = update.callback_query
         await query.answer()
         action, user_id = query.data.split('_')
@@ -97,10 +97,10 @@ class BotWrapper:
             user.approved = True
             user.save()
             await query.edit_message_text('User approved')
-            await context.bot.send_message(user.telegram_data_id, 'You have been approved to use the bot')
+            await context.bot.send_message(user.telegram_data.telegram_id, 'You have been approved to use the bot')
         else:
             await query.edit_message_text('User rejected')
-            await context.bot.send_message(user.telegram_data_id, 'You have been rejected')
+            await context.bot.send_message(user.telegram_data.telegram_id, 'You have been rejected')
 
 
 

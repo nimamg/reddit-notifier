@@ -15,10 +15,14 @@ class User(BaseModel):
     first_name = CharField(null=True)
     last_name = CharField(null=True)
 
+    @property
+    def telegram_data(self):
+        return self.telegramdata_set.get()
+
 
 class TelegramData(BaseModel):
     telegram_id = CharField(primary_key=True)
-    user = ForeignKeyField(User, backref='telegram_data')
+    user = ForeignKeyField(User, unique=True)
     username = CharField(null=True)
 
 
