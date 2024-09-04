@@ -1,5 +1,6 @@
 from typing import List
 
+from telegram.constants import ParseMode
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, Bot
 
 from telegram.ext import (
@@ -101,6 +102,10 @@ class BotWrapper:
         else:
             await query.edit_message_text('User rejected')
             await context.bot.send_message(user.telegram_data.telegram_id, 'You have been rejected')
+
+    async def send_message(self, chat_id, text, parse_mode=ParseMode.MARKDOWN_V2):
+        await self.bot.send_message(chat_id, text, parse_mode=parse_mode)
+
 
 
 
