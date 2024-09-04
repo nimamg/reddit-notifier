@@ -39,9 +39,8 @@ class RedditRepository:
         return Subreddit.select()
 
     @staticmethod
-    def get_latest_post_from_each_subreddit():
-        return Submission.select(Submission.subreddit, Submission.created).group_by(Submission.subreddit).order_by(
-            Submission.created.desc())
+    def get_latest_post_from_subreddit(subreddit):
+        return Submission.select(Submission.created).where(Submission.subreddit == subreddit).order_by(Submission.created.desc()).first()
 
     @staticmethod
     def create_submission(id, title, subreddit, created, linked_url, submission_url):
@@ -59,3 +58,9 @@ class RedditRepository:
     @staticmethod
     def delete_subreddit_user(user, subreddit):
         return SubredditUser.delete().where(SubredditUser.user == user, SubredditUser.subreddit == subreddit).execute()
+
+
+class SubredditUserRepository:
+    @staticmethod
+    def get_telegram_ids_per_subreddit():
+        return SubredditUser.select(SubredditUser.subreddit, TelegramData.telegram_id).join(User).join(TelegramData).group_by(SubredditUser.subreddit).dicts()
